@@ -1,0 +1,13 @@
+{
+  "name": "itc230",
+  "version": "1.0.0",
+  "description": "week1 package",
+  "main": "index.js",
+  "repository": "",
+  "author": "james carroll",
+  "dependencies": {
+    "async": "~0.2.8",
+    "express": "~3.2.4",
+    "socket.io": "~0.9.14"
+  }
+}
