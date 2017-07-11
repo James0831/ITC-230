@@ -3,11 +3,23 @@
   "version": "1.0.0",
   "description": "week1 package",
   "main": "index.js",
-  "repository": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/james0831/ITC-230.git"
+  },
   "author": "james carroll",
   "dependencies": {
     "async": "~0.2.8",
-    "express": "~3.2.4",
+    "express": "^3.2.6",
     "socket.io": "~0.9.14"
-  }
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/james0831/ITC-230/issues"
+  },
+  "homepage": "https://github.com/james0831/ITC-230#readme"
 }
