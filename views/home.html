@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<link rel="stylesheet" href="/css/main.css">
+
+<body>
+<h2>Home</h2>
+<form method="POST" action="/details">
+    <input type="text" name="artist" placeholder="artist" required maxlength="100">
+    <button>Search</button>
+</form>
+<hr>
+<h3>Artist's</h3>
+{{#each songs}}
+    <li><a href="/details?artist={{artist}}">{{artist}}</a></li>
+{{/each}}
+</body>
