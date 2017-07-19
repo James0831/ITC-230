@@ -31,6 +31,7 @@ app.get('/details', function(req, res){
   res.render("details", {artist: req.query.artist, result: found, songs: song.getAll()});
 });
 
+// details page. handle POST
 app.post('/details', function(req,res){
     console.log(req.body)
     var found = song.get(req.body.artist);
@@ -43,10 +44,11 @@ app.get('/delete', function(req,res){
     res.render('delete', {title: req.query.artist, result: result});
 });
 
-
-
-
-
+// handle GET 
+app.get('/add', function(req,res){
+    let result = song.add(req.query.artist); // adds book 
+    res.render('added', {title: req.query.artist, result: result});
+});
 
 // custom 404 page
 app.use(function(req, res){
