@@ -10,7 +10,8 @@
   "author": "james carroll",
   "dependencies": {
     "express": "^3.21.2",
-    "express-handlebars": "^3.0.0"
+    "express-handlebars": "^3.0.0",
+    "mongoose": "^4.11.4"
   },
   "devDependencies": {
     "chai": "^4.1.0",
