@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>Artist List</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.1/react.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/15.3.1/react-dom.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
+<style type="text/css">
+    .flex-container {
+        display: -webkit-flex;
+        display: flex;
+        width: 600px;
+        background-color: lightgrey;
+    }
+        #item-list {
+            background-color: cornflowerblue;
+            width: 30%;
+            padding: 0px 10px 0px 0px;
+    }
+    #item-details {
+        background-color: yellow;
+        width: 75%;
+        padding: 10px;
+    }
+</style> 
+<div id="root"> </div>
+
+<!-- NOTE: script type declaration to support JSX -->
+<script type="text/babel">
+
+    // convert date value to yyyy-mm-dd expected by HTML5 date field
+    function getISOstring(dateString) {
+        let date = (dateString) ? new Date(dateString) : new Date();
+        let month = (date.getMonth() >=9) ? date.getMonth()+1 : "0" + (date.getMonth()+1);
+        let day = (date.getDate() >=10) ? date.getDate() : "0" + date.getDate();
+        return date.getFullYear() + "-" + month + "-" + day; 
+    }
+
+    // define app container Component
+    class SongApp extends React.Component{
+        constructor(props){
+            // Pass props to parent class
+            super(props);
+            // Set initial state w/ hard-coded data
+            this.state = {
+                data: {{{songs}}},
+                filter: "", // search term 
+                curItem: {} // current selected item 
+            };
+            // bind App context to functions for reference in sub components
+            this.onSearchChange = this.onSearchChange.bind(this);
+            this.onChange = this.onChange.bind(this);
+            this.onSave = this.onSave.bind(this);
+            this.onDelete = this.onDelete.bind(this);
+            this.onClear = this.onClear.bind(this);
+        }
+        
+        // search handler
+        onSearchChange(event) {
+            // set search term. react will handle component updates 
+            this.setState({filter: event.target.value.toLowerCase() });
+        }
+        
+        // show item details
+        showDetails(event){
+            // event.target is list item clicked
+            let editItem = this.state.data.find((item) => {
+                return item._id == event.target.id;
+            });
+            this.setState({curItem: editItem});
+        }
+        
+        // clear details form
+        onClear() {
+            this.setState({curItem: {}});
+        }
+        
+        // handle detail changes
+        onChange(event) {
+            var newItem = this.state.curItem;
+            newItem[event.target.name] = event.target.value
+            this.setState({curItem: newItem});
+        }
+        
+        // Handle item save
+        onSave() {
+            let newItem = this.state.curItem;
+            if (!newItem.artist) {
+                return;
+            }
+            fetch("/api/v1/add/", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newItem)
+            }).then(res => res.json())
+            .then((json) => {
+                let newData;
+                if (!newItem._id) { // add new item to array
+                    newData = this.state.data;
+                    newItem._id = json._id;
+                    newData.push(newItem);
+                } else { // update existing item 
+                    newData = this.state.data.map((item) => {
+                        if (item._id === newItem._id) {
+                            item = newItem; 
+                        }
+                        return item;
+                    }); 
+                }
+                // Update state with new array
+                this.setState({data: newData});
+            });
+        }
+        
+        // Handle item delete
+        onDelete(){
+            let id = this.state.curItem._id;
+            
+            fetch("/api/v1/delete/" + id).then((response) => {
+                return response.json();
+            }).then((results) => {
+                // Filter all items except the one to be removed
+                const remainder = this.state.data.filter((item) => {
+                    return item._id !== id;
+                });
+                
+                // Update state with new array
+                this.setState({data: remainder, curItem: {}});
+            });
+        }
+        
+        render() {
+            // render app elements
+            return (
+            <div>
+            <Title title="Artist List" />
+            <SearchForm filter={this.state.filter} change={this.onSearchChange} />
+            <div className="flex-container">
+            <ItemList
+            items={this.state.data} 
+            filter={this.state.filter}
+            show={this.showDetails.bind(this)}
+            />
+            <ItemDetails item={this.state.curItem} change={this.onChange} save={this.onSave} reset={this.onClear} delete={this.onDelete} />
+            </div>
+            </div>
+            );
+        }
+    }
+    
+    // UI elements
+    const Title = ({title}) => {
+        return (
+        <div><h2>{title}</h2></div>
+        );
+    }
+    const SearchForm = (props) => {
+        return (
+        <div>
+        <input
+        type="text" placeholder="Enter a search term"
+        value={props.filter}
+        onChange={props.change}
+        /><p/>
+        </div>
+        );
+    }
+    const ItemList = ({items, filter, show}) => {
+        // return items that match search entry field, or all items if no entry
+        const itemNodes = items.map((item) => {
+            if (!filter || item.artist.toLowerCase().includes(filter)) { 
+                return <li id={item._id} key={item._id} onClick={show}>{item.artist}</li>
+            }
+        });
+        return <span id="item-list"><ul>{itemNodes}</ul></span>;
+    }
+    
+    const ItemDetails = (props) => {
+        return (
+        <span id="item-details">
+        <h3>Details:</h3>
+        <form onChange={props.change}>
+        <input type="text" name="artist" placeholder="artist" value={props.item.artist || ""} /><p/>
+        <input type="text" name="title" placeholder="title" value={props.item.title || ""} /><p/>
+        <input type="text" name="album" placeholder="album" value={props.item.album || ""} />
+        <p/>
+        </form>
+        <button onClick={props.save}>Save</button> <button onClick={props.reset}>Reset</button> <button onClick={props.delete}>Delete</button>
+        </span>
+        );
+    }
+    
+    ReactDOM.render(<SongApp />, document.getElementById('root'));
+</script>
+
+</head>
+<body>
+    <h1>Find an Artist</h1>
+
+    <h3>Search, add, or delete artists from the list!</h3>
+    <form class="form-horizontal" role="form" action="/details" method="POST">
+        <input type="hidden" name="_csrf" value="{{csrf}}">
+        <div class="form-group">
+            <label for="artistName" class="col-sm-2 control-label">
+            Artists
+            </label>
+            <div class="col-sm-4">
+                <input type="text" class="form-control" required id="fieldName" name="artist">
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-4">
+                <button type="submit" class="btn-search">
+                Search
+                </button>
+            </div>
+        </div>
+    </form>
+</body>
+</html>

@@ -1,0 +1,14 @@
+
+<html>
+<body>
+  <h2>Details for {{artist}}</h2>
+  {{#if result}}
+    <li>Artist: {{ result.artist }} </li>
+    <li>Title: {{ result.title }} </li>
+    <li>Album: {{ result.album }} </li>
+    <p><a href="/delete?artist={{result.artist}}">DELETE</a></p>
+  {{else}}
+    not found
+  {{/if}}
+</body>
+</html>

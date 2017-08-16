@@ -1,25 +1,33 @@
 'use strict'
 var song = require("./lib/songs.js");
 
-const express = require("express");
-const app = express();
-var Song = require("./models/song");
+let express = require("express");
+let Song = require("./models/song");
+
+let app = express();
+
+let bodyParser = require("body-parser");
 
 app.set('port', process.env.PORT || 3000);
 app.use(express.static(__dirname + '/public')); // set location for static files
-app.use(require("body-parser").urlencoded({extended: true})); // parse form submissions
-app.use('/api', require('cors')());
+app.use(bodyParser.urlencoded({extended: true})); // parse form submissions
+app.use(bodyParser.json());
+app.use('/api', require('cors')()); // set Access-Control-Allow-Origin header for api route
+app.use((err, req, res, next) => {
+  console.log(err);
+});
 
 // set up handlebars view engine
-var handlebars = require('express-handlebars');
-app.engine('.html', handlebars({extname: '.html'}));
-app.set('view engine', '.html');
+let handlebars = require('express-handlebars');
+app.engine('.handlebars', handlebars({extname: '.handlebars'}));
+app.set('view engine', '.handlebars');
+
 
 // home page
 app.get('/', (req,res,next) => {
   Song.find({},(err,songs) => {
     if (err) return next(err);
-    res.render('home', {songs: songs});
+    res.render('home', {songs: JSON.stringify(songs)});
   })
 });
 
@@ -48,21 +56,22 @@ app.post('/details', (req,res,next) => {
 });
 
 // delete page
-app.get('/delete', (req,res,next) => {
-  Song.remove({ title:req.query.title }, (err, result) => {
+/*app.get('/delete', (req,res,next) => {
+  Song.remove({ artist:req.query.artist }, (err, result) => {
         if (err) return next(err);
         var deleted = result.result.n !== 0; // n will be 0 if no docs deleted
         Song.count((err, total) => {
             res.type('text/html');
-            res.render('delete', {title: req.query.title, deleted: result.result.n !== 0, total: total } );    
+            res.render('delete', {artist: req.query.artist, deleted: result.result.n !== 0, total: total } );    
         });
     });
 });
+*/
 
 // handle GET 
 app.get('/add', (req,res) => {
     let result = song.add(req.query.artist); // adds song 
-    res.render('added', {title: req.query.artist, result: result});
+    res.render('added', {artist: req.query.artist, result: result});
 });
 
 //api's
@@ -86,8 +95,8 @@ app.get('/api/v1/songs', (req,res, next) => {
 });
 
 // delete song
-app.get('/api/v1/delete/:artist', (req,res, next) => {
-    Song.remove({"artist":req.params.artist }, (err, result) => {
+app.get('/api/v1/delete/:id', (req,res, next) => {
+    Song.remove({"_id":req.params.id }, (err, result) => {
         if (err) return next(err);
         // return # of items deleted
         res.json({"deleted": result.result.n});
